@@ -2,9 +2,11 @@ import Header from "./components/Header.tsx";
 import GameStatus from "./components/GameStatus.tsx";
 import AriaLiveStatus from "./components/AriaLiveStatus.tsx";
 import LanguageChips from "./components/LanguageChips.tsx";
+import NewGameButton from "./components/NewGame.tsx";
+import Word from "./components/Word.tsx";
+import Keyboard from "./components/Keyboard.tsx";
 import { languages } from "./languages.ts";
 import { useState } from "react";
-import clsx from "clsx";
 import { getRandomWord } from "./utils.ts";
 import ConfettiContainer from "./components/ReactConfetti.tsx";
 export default function App() {
@@ -40,50 +42,6 @@ export default function App() {
   }
 
   const alphabets = "abcdefghijklmnopqrstuvwxyz";
-  const KeyboardElements = alphabets.split("").map((letter) => {
-    const isGuessed = guess.includes(letter);
-    const isCorrect = isGuessed && currentWord.includes(letter);
-    const isIncorrect = isGuessed && !currentWord.includes(letter);
-
-    const className = clsx({
-      correct: isCorrect,
-      incorrect: isIncorrect,
-    });
-
-    return (
-      <button
-        key={letter}
-        className={className}
-        disabled={isGameOver}
-        aria-disabled={guess.includes(letter)}
-        aria-label={`letter ${letter}`}
-        onClick={() => {
-          addGuessLetter(letter);
-        }}
-      >
-        {letter.toUpperCase()}
-      </button>
-    );
-  });
-
-  const revealLetterElements = currentWord.split("").map((letter, index) => {
-    return (
-      <span
-        key={index}
-        className={clsx("letter", guess.includes(letter) ? "incorrect" : "")}
-      >
-        {letter.toUpperCase()}
-      </span>
-    );
-  });
-
-  const letterElements = currentWord.split("").map((letter, index) => {
-    return (
-      <span key={index} className="letter">
-        {guess.includes(letter) ? letter.toUpperCase() : ""}
-      </span>
-    );
-  });
 
   return (
     <main>
@@ -99,21 +57,21 @@ export default function App() {
         />
       </section>
       <LanguageChips languages={languages} wrongGuessCount={wrongGuessCount} />
-      <section className="word">
-        {isGameLost ? revealLetterElements : letterElements}
-      </section>
+      <Word isGameLost={isGameLost} currentWord={currentWord} guess={guess} />
       <AriaLiveStatus
         currentWord={currentWord}
         lastGuessLetter={lastGuessLetter}
         guess={guess}
         numberOfGuess={numberOfGuess}
       />
-      <section className="keyboard">{KeyboardElements}</section>
-      {isGameOver ? (
-        <button onClick={startNewGame} className="new-game">
-          New Game
-        </button>
-      ) : undefined}
+      <Keyboard
+        alphabets={alphabets}
+        guess={guess}
+        currentWord={currentWord}
+        isGameOver={isGameOver}
+        addGuessLetter={addGuessLetter}
+      />
+      <NewGameButton isGameOver={isGameOver} startNewGame={startNewGame} />
     </main>
   );
 }

@@ -1,6 +1,6 @@
 import type { JSX } from "react/jsx-runtime";
 
-type ariaLiveStatusProps = {
+type AriaLiveStatusProps = {
   currentWord: string;
   guess: string[];
   lastGuessLetter: string;
@@ -11,7 +11,7 @@ export default function AriaLiveStatus({
   guess,
   lastGuessLetter,
   numberOfGuess,
-}: ariaLiveStatusProps): JSX.Element {
+}: AriaLiveStatusProps): JSX.Element {
   return (
     <section className="sr-only" aria-live="polite" role="status">
       <p>
