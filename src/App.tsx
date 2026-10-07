@@ -1,122 +1,167 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import Header from "./components/Header.tsx"
+import { languages } from "./languages.ts"
+import { useState } from "react"
+import clsx from "clsx"
+import { getFarewellText, getRandomWord } from "./utils.ts"
+import ReactConfetti from "react-confetti"
+export default function App() {
 
-function App() {
-  const [count, setCount] = useState(0)
+  // state variables
+  const [currentWord, setCurrentWord] = useState<string>(() : string => getRandomWord())
+  const [guess, setGuess] = useState<string[]>([])
+  
+  // derived variables
+  // const wrongGuessCount : number = guess.reduce((count : number, letter : string) : number => {
+  //   return (currentWord.includes(letter)) ? count : count + 1
+  // }, 0)
+  const wrongGuessCount:number = guess.filter(((letter :string ) :boolean => !currentWord.includes(letter))).length
+  const numberOfGuess:number = languages.length - 1 - wrongGuessCount
+  const isGameLost:boolean = (languages.length - 1 <= wrongGuessCount)
+  const isGameWon:boolean = currentWord.split("").every((letter:string):boolean => (guess.includes(letter)))
+  const lastGuessLetter:string = guess[guess.length - 1]
+  const isLastGuessIncorrect:boolean = lastGuessLetter && !currentWord.includes(lastGuessLetter)
+  const isGameOver:boolean = isGameLost || isGameWon
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+  function addGuessLetter(letter) {
+    setGuess(prevGuess => {
+      return prevGuess.includes(letter) ?
+        prevGuess :
+        [...prevGuess, letter]
+    })
+  }
 
-      <div className="ticks"></div>
+  function startNewGame() {
+    setGuess([])
+    setCurrentWord(() => getRandomWord())
+  }
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+  const alphabets = 'abcdefghijklmnopqrstuvwxyz'
+  const KeyboardElements = alphabets.split("").map(letter => {
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    const isGuessed = guess.includes(letter)
+    const isCorrect = isGuessed && currentWord.includes(letter)
+    const isIncorrect = isGuessed && !currentWord.includes(letter)
+
+    const className = clsx({
+      correct: isCorrect,
+      incorrect: isIncorrect
+    })
+
+    return <button
+      key={letter}
+      className={className}
+      disabled={isGameOver}
+      aria-disabled={guess.includes(letter)}
+      aria-label={`letter ${letter}`}
+      onClick={() => { addGuessLetter(letter) }}
+    >
+      {letter.toUpperCase()}
+    </button>
+  }
   )
-}
 
-export default App
+  const revealLetterElements = currentWord.split("").map((letter, index) => {
+    return <span
+      key={index}
+      className={clsx('letter', guess.includes(letter) ? 'incorrect' : '')}
+    >{letter.toUpperCase()}</span>
+  })
+
+  const letterElements = currentWord.split("").map((letter, index) => {
+    return <span
+      key={index}
+      className="letter">
+      {(guess.includes(letter)) ? letter.toUpperCase() : ""}
+    </span>
+  })
+
+  const languageElements = languages.map((language, index) => {
+    const styles = {
+      color: language.color,
+      backgroundColor: language.backgroundColor
+    }
+
+    const className = clsx({
+      chip: true,
+      lost: (index) < wrongGuessCount
+    })
+    return <span
+      key={index}
+      style={styles}
+      className={className}
+    >
+      {language.name}
+    </span>
+  })
+
+  const gameStatusClass = clsx('game-status',
+    isGameLost ? 'lose' : '',
+    isGameWon ? 'win' : '',
+    isLastGuessIncorrect && !isGameOver ? 'farewell' : '',
+  )
+
+  function renderGameStatus() {
+
+    if (!isGameOver && isLastGuessIncorrect) {
+      return <p>
+        {getFarewellText(languages[wrongGuessCount - 1].name)} 🫡
+      </p>
+    }
+    else if (isGameWon) {
+      return (<>
+        <h2>You Win</h2>
+        <p>Well done! 🎉</p>
+      </>)
+    } else if (isGameLost) {
+      return (<>
+        <h2>Game Over!</h2>
+        <p>You lose! Better start learning Assembly 😭</p>
+      </>)
+    } else {
+      return null
+    }
+  }
+
+  return (<main>
+    {isGameWon ? <ReactConfetti
+      recycle = {false}
+      numberOfPieces={1500}
+    /> : undefined}
+    <section className="header">
+      <Header />
+      <section
+        aria-live="polite"
+        role="status"
+        className={gameStatusClass}>
+        {renderGameStatus()}
+      </section>
+    </section>
+    <section className="language-chips">
+      {languageElements}
+    </section>
+    <section className="word">
+      {isGameLost ? revealLetterElements : letterElements}
+    </section>
+    <section className="sr-only"
+      aria-live="polite"
+      role="status"
+    >
+      <p>
+        {currentWord.includes(lastGuessLetter) ?
+          `Correct ${lastGuessLetter} is in the word` :
+          `Incorrect ${lastGuessLetter} is not in the word`}
+        You have {numberOfGuess} attempts left.
+      </p>
+      <p>Current word :
+        {currentWord.split("").map(letter =>
+          guess.includes(letter) ? letter + "." : "blank").join(" ")}
+      </p>
+    </section>
+    <section className="keyboard">
+      {KeyboardElements}
+    </section>
+    {isGameOver ? <button
+      onClick={startNewGame}
+      className="new-game">New Game</button> : undefined}
+  </main>)
+}
